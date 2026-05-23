@@ -1,24 +1,36 @@
-//
-//  ContentView.swift
-//  ConnectivityLab
-//
-//  Created by José Briones on 21/5/26.
-//
-
 import SwiftUI
 
-struct ContentView: View {
-    var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
-    }
+enum Transport {
+    case ble, wifi
 }
 
-#Preview {
-    ContentView()
+struct ContentView: View {
+    @State private var selected: Transport = .ble
+    @State private var bleManager = BLEManager()
+    @State private var wifiPinger = WiFiPinger()
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                Picker("Transport", selection: $selected) {
+                    Text("BLE").tag(Transport.ble)
+                    Text("Wi-Fi").tag(Transport.wifi)
+                }
+                .pickerStyle(.segmented)
+                .padding()
+
+                Divider()
+
+                switch selected {
+                case .ble:
+                    BLEListView(manager: bleManager)
+                case .wifi:
+                    WiFiStatusView(pinger: wifiPinger)
+                }
+
+                Spacer()
+            }
+            .navigationTitle("ConnectivityLab")
+        }
+    }
 }
