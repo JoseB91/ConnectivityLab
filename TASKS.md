@@ -72,3 +72,94 @@
 - [ ] Switching modes does not crash or leak resources
 - [ ] App works with any BLE hardware (no hardcoded UUIDs)
 - [ ] Simulator smoke-test for Wi-Fi path; physical device test for BLE
+
+---
+
+## GATT & SwiftUI Concepts
+
+Each task pairs a GATT capability with a SwiftUI property-wrapper / view concept to practice.
+
+### 1. Inject Manager via `@Environment`
+- [ ] `Shared/BLEManagerKey.swift` (new)
+  - [ ] Define `EnvironmentValues.bleManager` with a custom `EnvironmentKey`
+- [ ] `ConnectivityLabApp.swift`
+  - [ ] Construct `BLEManager` once and inject via `.environment(\.bleManager, manager)`
+- [ ] Refactor `ContentView` and `BLEListView` to read from `@Environment(\.bleManager)` instead of prop-drilling
+- [ ] Rationale: every subsequent task adds a view that needs the manager — wire this first to avoid refactoring later
+
+### 2. Connect & Discover Services — `@Bindable`
+- [ ] `BLE/BLEManager.swift`
+  - [ ] Add `selectedPeripheral: CBPeripheral?` and `discoveredServices: [CBService]`
+  - [ ] Add `connectingPeripheralID: UUID?` for in-flight connect state
+  - [ ] Implement `connect()` for the selected peripheral; call `centralManager.connect(_:)`
+  - [ ] Conform to `CBPeripheralDelegate`; on `didConnect`, call `discoverServices(nil)`
+  - [ ] Implement `peripheral(_:didDiscoverServices:)` → populate `discoveredServices`
+- [ ] `BLE/BLEDeviceDetailView.swift` (new)
+  - [ ] Receive `@Bindable var manager: BLEManager` (iOS 17 `@Observable` binding pattern)
+  - [ ] List services by UUID
+  - [ ] Push from `BLEDeviceRow` tap
+
+### 3. Scanning / Connecting Visual Feedback — `ViewModifier` + animation
+- [ ] `Shared/PulseModifier.swift` (new)
+  - [ ] `ViewModifier` driven by `@State private var isPulsing` + `.onAppear` toggle
+  - [ ] `withAnimation(.easeInOut.repeatForever())` on opacity / scale
+  - [ ] Extension: `View.pulse(active:)`
+- [ ] Apply to:
+  - [ ] BLE "Scanning…" header while `isScanning == true`
+  - [ ] `BLEDeviceRow` while `manager.connectingPeripheralID == peripheral.identifier`
+- [ ] Rationale: built early so tasks 4–7 can reuse it for in-flight read/write/notify states
+
+### 4. Discover Characteristics — `@State`
+- [ ] `BLE/BLEManager.swift`
+  - [ ] Cache `characteristics: [CBUUID: [CBCharacteristic]]` keyed by service UUID
+  - [ ] Implement `peripheral(_:didDiscoverCharacteristicsFor:error:)`
+- [ ] `BLE/BLEDeviceDetailView.swift`
+  - [ ] `@State private var expandedServiceID: CBUUID?` to toggle disclosure rows
+  - [ ] Trigger `discoverCharacteristics(nil, for:)` when a service expands
+
+### 5. Read Characteristic — `@Binding`
+- [ ] `BLE/CharacteristicRow.swift` (new)
+  - [ ] Accept `let characteristic: CBCharacteristic` and `@Binding var lastReadValue: Data?`
+  - [ ] "Read" button calls `peripheral.readValue(for:)`
+  - [ ] Render hex + UTF-8 preview of `lastReadValue`
+  - [ ] Apply `.pulse(active:)` while the read is in-flight
+- [ ] `BLE/BLEManager.swift`
+  - [ ] Implement `peripheral(_:didUpdateValueFor:error:)` → publish via `lastValues: [CBUUID: Data]`
+
+### 6. Write Characteristic — `@FocusState` + `@Binding<String>`
+- [ ] `BLE/CharacteristicWriteSheet.swift` (new)
+  - [ ] `@Binding var draft: String`
+  - [ ] `@FocusState private var inputFocused: Bool` (auto-focus on appear)
+  - [ ] Segmented control: write type `.withResponse` / `.withoutResponse`
+  - [ ] Submit → `peripheral.writeValue(_:for:type:)`
+- [ ] `BLE/BLEManager.swift`
+  - [ ] Implement `peripheral(_:didWriteValueFor:error:)` → surface success/error
+
+### 7. Notifications / Indications — Custom `ViewModifier`
+- [ ] `BLE/BLEManager.swift`
+  - [ ] `subscribe(to:)` → `peripheral.setNotifyValue(true, for:)`
+  - [ ] Re-emit updates through the existing `lastValues` map
+- [ ] `Shared/LiveValueBadgeModifier.swift` (new)
+  - [ ] `ViewModifier` that pulses opacity/scale when its observed value changes
+  - [ ] Extension: `View.liveValueBadge(trigger: Data?)`
+  - [ ] Apply to `CharacteristicRow` so subscribed values visibly pulse on each update
+
+### 8. Persist Last-Connected Peripheral — Custom `@propertyWrapper`
+- [ ] `Shared/UserDefault.swift` (new)
+  - [ ] `@propertyWrapper struct UserDefault<Value>` with `key`, `defaultValue`, `UserDefaults` storage
+- [ ] `BLE/BLEManager.swift`
+  - [ ] `@UserDefault("lastPeripheralUUID", default: nil) var lastPeripheralUUID: String?`
+  - [ ] On `didConnect`, store `peripheral.identifier.uuidString`
+  - [ ] On launch, attempt `retrievePeripherals(withIdentifiers:)` + auto-reconnect
+- [ ] Rationale: depends on `connect()` already working, so it lands last
+
+---
+
+## Validation for GATT Phase
+
+- [ ] Connect to a real BLE peripheral and list its services
+- [ ] Read at least one characteristic value (hex view renders)
+- [ ] Write a value to a writable characteristic (confirm callback fires)
+- [ ] Subscribe to a notifying characteristic; pulse modifier fires on each update
+- [ ] Force-quit and relaunch → app auto-reconnects to last peripheral via `@UserDefault`
+- [ ] No retain cycles: backgrounding the app and returning leaves no zombie connections
