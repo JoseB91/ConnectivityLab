@@ -15,6 +15,7 @@ final class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     var characteristics: [CBUUID: [CBCharacteristic]] = [:]
     var lastValues: [CBUUID: Data] = [:]
     var writeResults: [CBUUID: Result<Void, Error>] = [:]
+    var subscribedUUIDs: Set<CBUUID> = []
 
     private var central: CBCentralManager!
     private var scanTask: Task<Void, Never>?
@@ -77,6 +78,7 @@ final class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         characteristics = [:]
         lastValues = [:]
         writeResults = [:]
+        subscribedUUIDs = []
     }
 
     // MARK: - CBCentralManagerDelegate
@@ -137,6 +139,7 @@ final class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         characteristics = [:]
         lastValues = [:]
         writeResults = [:]
+        subscribedUUIDs = []
         if let error {
             connectionError = error.localizedDescription
         }
@@ -152,6 +155,14 @@ final class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         connectedPeripheral?.discoverCharacteristics(nil, for: service)
     }
 
+    func subscribe(to characteristic: CBCharacteristic) {
+        connectedPeripheral?.setNotifyValue(true, for: characteristic)
+    }
+
+    func unsubscribe(from characteristic: CBCharacteristic) {
+        connectedPeripheral?.setNotifyValue(false, for: characteristic)
+    }
+
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         guard error == nil, let discovered = peripheral.services else { return }
         discoveredServices = discovered
@@ -165,6 +176,15 @@ final class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         guard error == nil, let data = characteristic.value else { return }
         lastValues[characteristic.uuid] = data
+    }
+
+    func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
+        guard error == nil else { return }
+        if characteristic.isNotifying {
+            subscribedUUIDs.insert(characteristic.uuid)
+        } else {
+            subscribedUUIDs.remove(characteristic.uuid)
+        }
     }
 
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {

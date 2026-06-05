@@ -136,13 +136,13 @@ Each task pairs a GATT capability with a SwiftUI property-wrapper / view concept
   - [x] Implement `peripheral(_:didWriteValueFor:error:)` → surface success/error
 
 ### 7. Notifications / Indications — Custom `ViewModifier`
-- [ ] `BLE/BLEManager.swift`
-  - [ ] `subscribe(to:)` → `peripheral.setNotifyValue(true, for:)`
-  - [ ] Re-emit updates through the existing `lastValues` map
-- [ ] `Shared/LiveValueBadgeModifier.swift` (new)
-  - [ ] `ViewModifier` that pulses opacity/scale when its observed value changes
-  - [ ] Extension: `View.liveValueBadge(trigger: Data?)`
-  - [ ] Apply to `CharacteristicRow` so subscribed values visibly pulse on each update
+- [x] `BLE/BLEManager.swift`
+  - [x] `subscribe(to:)` → `peripheral.setNotifyValue(true, for:)`
+  - [x] Re-emit updates through the existing `lastValues` map
+- [x] `Shared/LiveValueBadgeModifier.swift` (new)
+  - [x] `ViewModifier` that pulses opacity/scale when its observed value changes
+  - [x] Extension: `View.liveValueBadge(trigger: Data?)`
+  - [x] Apply to `CharacteristicRow` so subscribed values visibly pulse on each update
 
 ### 8. Persist Last-Connected Peripheral — Custom `@propertyWrapper`
 - [ ] `Shared/UserDefault.swift` (new)

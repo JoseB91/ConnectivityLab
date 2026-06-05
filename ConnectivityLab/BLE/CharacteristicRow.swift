@@ -6,6 +6,8 @@ struct CharacteristicRow: View {
     let peripheral: CBPeripheral
     @Binding var lastReadValue: Data?
     var writeResult: Result<Void, Error>?
+    var isSubscribed: Bool = false
+    var onSubscribeToggle: (() -> Void)? = nil
 
     @State private var isReading = false
     @State private var showWriteSheet = false
@@ -16,19 +18,40 @@ struct CharacteristicRow: View {
         characteristic.properties.contains(.write) ||
         characteristic.properties.contains(.writeWithoutResponse)
     }
+    private var canNotify: Bool {
+        characteristic.properties.contains(.notify) ||
+        characteristic.properties.contains(.indicate)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .center, spacing: 8) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(characteristic.uuid.uuidString)
-                        .font(.caption.monospaced())
+                    HStack(spacing: 4) {
+                        Text(characteristic.uuid.uuidString)
+                            .font(.caption.monospaced())
+                        if isSubscribed {
+                            Image(systemName: "dot.radiowaves.left.and.right")
+                                .font(.caption2)
+                                .foregroundStyle(.blue)
+                                .liveValueBadge(trigger: lastReadValue)
+                        }
+                    }
                     Text(propertiesDescription)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
 
                 Spacer()
+
+                if canNotify {
+                    Button(isSubscribed ? "Unsub" : "Notify") {
+                        onSubscribeToggle?()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.mini)
+                    .tint(isSubscribed ? .blue : nil)
+                }
 
                 if canRead {
                     Button("Read") {
@@ -52,6 +75,7 @@ struct CharacteristicRow: View {
 
             if let data = lastReadValue {
                 valuePreview(data)
+                    .liveValueBadge(trigger: isSubscribed ? data : nil)
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
 

@@ -123,7 +123,15 @@ struct BLEDeviceDetailView: View {
                                                 get: { manager.lastValues[characteristic.uuid] },
                                                 set: { manager.lastValues[characteristic.uuid] = $0 }
                                             ),
-                                            writeResult: manager.writeResults[characteristic.uuid]
+                                            writeResult: manager.writeResults[characteristic.uuid],
+                                            isSubscribed: manager.subscribedUUIDs.contains(characteristic.uuid),
+                                            onSubscribeToggle: {
+                                                if manager.subscribedUUIDs.contains(characteristic.uuid) {
+                                                    manager.unsubscribe(from: characteristic)
+                                                } else {
+                                                    manager.subscribe(to: characteristic)
+                                                }
+                                            }
                                         )
                                     }
                                 }
