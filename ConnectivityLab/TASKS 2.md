@@ -145,13 +145,13 @@ Each task pairs a GATT capability with a SwiftUI property-wrapper / view concept
   - [x] Apply to `CharacteristicRow` so subscribed values visibly pulse on each update
 
 ### 8. Persist Last-Connected Peripheral — Custom `@propertyWrapper`
-- [ ] `Shared/UserDefault.swift` (new)
-  - [ ] `@propertyWrapper struct UserDefault<Value>` with `key`, `defaultValue`, `UserDefaults` storage
-- [ ] `BLE/BLEManager.swift`
-  - [ ] `@UserDefault("lastPeripheralUUID", default: nil) var lastPeripheralUUID: String?`
-  - [ ] On `didConnect`, store `peripheral.identifier.uuidString`
-  - [ ] On launch, attempt `retrievePeripherals(withIdentifiers:)` + auto-reconnect
-- [ ] Rationale: depends on `connect()` already working, so it lands last
+- [x] `Shared/UserDefault.swift` (new)
+  - [x] `@propertyWrapper struct UserDefault<Value>` with `key`, `defaultValue`, `UserDefaults` storage
+- [x] `BLE/BLEManager.swift`
+  - [x] `@UserDefault(key: "lastPeripheralUUID", defaultValue: nil) var lastPeripheralUUID: String?`
+  - [x] On `didConnect`, store `peripheral.identifier.uuidString`
+  - [x] On launch, attempt `retrievePeripherals(withIdentifiers:)` + auto-reconnect
+- [x] Rationale: depends on `connect()` already working, so it lands last
 
 ---
 

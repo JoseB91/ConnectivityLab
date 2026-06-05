@@ -17,6 +17,11 @@ final class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     var writeResults: [CBUUID: Result<Void, Error>] = [:]
     var subscribedUUIDs: Set<CBUUID> = []
 
+    var lastPeripheralUUID: String? {
+        get { UserDefaults.standard.string(forKey: "lastPeripheralUUID") }
+        set { UserDefaults.standard.set(newValue, forKey: "lastPeripheralUUID") }
+    }
+
     private var central: CBCentralManager!
     private var scanTask: Task<Void, Never>?
     private var connectContinuation: CheckedContinuation<Void, Error>?
@@ -81,12 +86,25 @@ final class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         subscribedUUIDs = []
     }
 
+    // MARK: - Auto-reconnect
+
+    private func attemptAutoReconnect() {
+        guard let uuidString = lastPeripheralUUID,
+              let uuid = UUID(uuidString: uuidString) else { return }
+        let known = central.retrievePeripherals(withIdentifiers: [uuid])
+        guard let peripheral = known.first else { return }
+        Task {
+            try? await connect(peripheral: peripheral)
+        }
+    }
+
     // MARK: - CBCentralManagerDelegate
 
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
         case .poweredOn:
             stateError = nil
+            attemptAutoReconnect()
         case .poweredOff:
             stateError = "Bluetooth is off."
         case .unauthorized:
@@ -116,6 +134,7 @@ final class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         isConnected = true
         connectedPeripheral = peripheral
         connectingPeripheralID = nil
+        lastPeripheralUUID = peripheral.identifier.uuidString
         peripheral.discoverServices(nil)
         connectContinuation?.resume()
         connectContinuation = nil
