@@ -110,21 +110,21 @@ Each task pairs a GATT capability with a SwiftUI property-wrapper / view concept
 - [x] Rationale: built early so tasks 4–7 can reuse it for in-flight read/write/notify states
 
 ### 4. Discover Characteristics — `@State`
-- [ ] `BLE/BLEManager.swift`
-  - [ ] Cache `characteristics: [CBUUID: [CBCharacteristic]]` keyed by service UUID
-  - [ ] Implement `peripheral(_:didDiscoverCharacteristicsFor:error:)`
-- [ ] `BLE/BLEDeviceDetailView.swift`
-  - [ ] `@State private var expandedServiceID: CBUUID?` to toggle disclosure rows
-  - [ ] Trigger `discoverCharacteristics(nil, for:)` when a service expands
+- [x] `BLE/BLEManager.swift`
+  - [x] Cache `characteristics: [CBUUID: [CBCharacteristic]]` keyed by service UUID
+  - [x] Implement `peripheral(_:didDiscoverCharacteristicsFor:error:)`
+- [x] `BLE/BLEDeviceDetailView.swift`
+  - [x] `@State private var expandedServiceID: CBUUID?` to toggle disclosure rows
+  - [x] Trigger `discoverCharacteristics(nil, for:)` when a service expands
 
 ### 5. Read Characteristic — `@Binding`
-- [ ] `BLE/CharacteristicRow.swift` (new)
-  - [ ] Accept `let characteristic: CBCharacteristic` and `@Binding var lastReadValue: Data?`
-  - [ ] "Read" button calls `peripheral.readValue(for:)`
-  - [ ] Render hex + UTF-8 preview of `lastReadValue`
-  - [ ] Apply `.pulse(active:)` while the read is in-flight
-- [ ] `BLE/BLEManager.swift`
-  - [ ] Implement `peripheral(_:didUpdateValueFor:error:)` → publish via `lastValues: [CBUUID: Data]`
+- [x] `BLE/CharacteristicRow.swift` (new)
+  - [x] Accept `let characteristic: CBCharacteristic` and `@Binding var lastReadValue: Data?`
+  - [x] "Read" button calls `peripheral.readValue(for:)`
+  - [x] Render hex + UTF-8 preview of `lastReadValue`
+  - [x] Apply `.pulse(active:)` while the read is in-flight
+- [x] `BLE/BLEManager.swift`
+  - [x] Implement `peripheral(_:didUpdateValueFor:error:)` → publish via `lastValues: [CBUUID: Data]`
 
 ### 6. Write Characteristic — `@FocusState` + `@Binding<String>`
 - [ ] `BLE/CharacteristicWriteSheet.swift` (new)

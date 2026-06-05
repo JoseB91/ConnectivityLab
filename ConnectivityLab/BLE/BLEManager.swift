@@ -12,6 +12,8 @@ final class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     var selectedPeripheral: CBPeripheral? = nil
     var discoveredServices: [CBService] = []
     var connectingPeripheralID: UUID? = nil
+    var characteristics: [CBUUID: [CBCharacteristic]] = [:]
+    var lastValues: [CBUUID: Data] = [:]
 
     private var central: CBCentralManager!
     private var scanTask: Task<Void, Never>?
@@ -71,6 +73,8 @@ final class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         selectedPeripheral = nil
         connectingPeripheralID = nil
         discoveredServices = []
+        characteristics = [:]
+        lastValues = [:]
     }
 
     // MARK: - CBCentralManagerDelegate
@@ -128,6 +132,8 @@ final class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         selectedPeripheral = nil
         connectingPeripheralID = nil
         discoveredServices = []
+        characteristics = [:]
+        lastValues = [:]
         if let error {
             connectionError = error.localizedDescription
         }
@@ -139,18 +145,22 @@ final class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
 
     // MARK: - CBPeripheralDelegate
 
+    func discoverCharacteristics(for service: CBService) {
+        connectedPeripheral?.discoverCharacteristics(nil, for: service)
+    }
+
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         guard error == nil, let discovered = peripheral.services else { return }
         discoveredServices = discovered
-        for service in discovered {
-            peripheral.discoverCharacteristics(nil, for: service)
-        }
     }
 
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
-        // Trigger observation update so views reflecting discoveredServices/characteristics refresh
-        if let idx = discoveredServices.firstIndex(where: { $0 == service }) {
-            discoveredServices[idx] = service
-        }
+        guard error == nil else { return }
+        characteristics[service.uuid] = service.characteristics ?? []
+    }
+
+    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        guard error == nil, let data = characteristic.value else { return }
+        lastValues[characteristic.uuid] = data
     }
 }

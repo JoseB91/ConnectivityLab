@@ -68,6 +68,8 @@ struct BLEDeviceDetailView: View {
         .padding()
     }
 
+    @State private var expandedServiceID: CBUUID? = nil
+
     private var serviceList: some View {
         List {
             if manager.discoveredServices.isEmpty {
@@ -81,15 +83,56 @@ struct BLEDeviceDetailView: View {
                 }
             } else {
                 ForEach(manager.discoveredServices, id: \.uuid) { service in
-                    Section(header: Text(service.uuid.uuidString).font(.caption)) {
-                        let characteristics = service.characteristics ?? []
-                        if characteristics.isEmpty {
-                            Text("No characteristics")
-                                .foregroundStyle(.secondary)
-                                .font(.caption)
-                        } else {
-                            ForEach(characteristics, id: \.uuid) { characteristic in
-                                CharacteristicSummaryRow(characteristic: characteristic)
+                    let isExpanded = expandedServiceID == service.uuid
+                    Section {
+                        // Tappable header row acting as disclosure toggle
+                        Button {
+                            if isExpanded {
+                                expandedServiceID = nil
+                            } else {
+                                expandedServiceID = service.uuid
+                                if manager.characteristics[service.uuid] == nil {
+                                    manager.discoverCharacteristics(for: service)
+                                }
+                            }
+                        } label: {
+                            HStack {
+                                Text(service.uuid.uuidString)
+                                    .font(.caption.monospaced())
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                                Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .buttonStyle(.plain)
+
+                        if isExpanded {
+                            if let chars = manager.characteristics[service.uuid] {
+                                if chars.isEmpty {
+                                    Text("No characteristics")
+                                        .foregroundStyle(.secondary)
+                                        .font(.caption)
+                                } else {
+                                    ForEach(chars, id: \.uuid) { characteristic in
+                                        CharacteristicRow(
+                                            characteristic: characteristic,
+                                            peripheral: peripheral,
+                                            lastReadValue: Binding(
+                                                get: { manager.lastValues[characteristic.uuid] },
+                                                set: { manager.lastValues[characteristic.uuid] = $0 }
+                                            )
+                                        )
+                                    }
+                                }
+                            } else {
+                                HStack(spacing: 8) {
+                                    ProgressView()
+                                    Text("Loading…")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
                             }
                         }
                     }
@@ -97,31 +140,8 @@ struct BLEDeviceDetailView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .animation(.default, value: expandedServiceID)
+        .animation(.default, value: manager.characteristics.keys.map(\.uuidString).sorted())
     }
 }
 
-private struct CharacteristicSummaryRow: View {
-    let characteristic: CBCharacteristic
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(characteristic.uuid.uuidString)
-                .font(.caption.monospaced())
-            Text(propertiesDescription)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-        }
-        .padding(.vertical, 2)
-    }
-
-    private var propertiesDescription: String {
-        var props: [String] = []
-        let p = characteristic.properties
-        if p.contains(.read)   { props.append("Read") }
-        if p.contains(.write)  { props.append("Write") }
-        if p.contains(.notify) { props.append("Notify") }
-        if p.contains(.indicate) { props.append("Indicate") }
-        if p.contains(.writeWithoutResponse) { props.append("WriteNoResp") }
-        return props.isEmpty ? "No properties" : props.joined(separator: " · ")
-    }
-}
