@@ -127,13 +127,13 @@ Each task pairs a GATT capability with a SwiftUI property-wrapper / view concept
   - [x] Implement `peripheral(_:didUpdateValueFor:error:)` → publish via `lastValues: [CBUUID: Data]`
 
 ### 6. Write Characteristic — `@FocusState` + `@Binding<String>`
-- [ ] `BLE/CharacteristicWriteSheet.swift` (new)
-  - [ ] `@Binding var draft: String`
-  - [ ] `@FocusState private var inputFocused: Bool` (auto-focus on appear)
-  - [ ] Segmented control: write type `.withResponse` / `.withoutResponse`
-  - [ ] Submit → `peripheral.writeValue(_:for:type:)`
-- [ ] `BLE/BLEManager.swift`
-  - [ ] Implement `peripheral(_:didWriteValueFor:error:)` → surface success/error
+- [x] `BLE/CharacteristicWriteSheet.swift` (new)
+  - [x] `@Binding var draft: String`
+  - [x] `@FocusState private var inputFocused: Bool` (auto-focus on appear)
+  - [x] Segmented control: write type `.withResponse` / `.withoutResponse`
+  - [x] Submit → `peripheral.writeValue(_:for:type:)`
+- [x] `BLE/BLEManager.swift`
+  - [x] Implement `peripheral(_:didWriteValueFor:error:)` → surface success/error
 
 ### 7. Notifications / Indications — Custom `ViewModifier`
 - [ ] `BLE/BLEManager.swift`

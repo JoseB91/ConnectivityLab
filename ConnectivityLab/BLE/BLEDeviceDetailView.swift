@@ -122,7 +122,8 @@ struct BLEDeviceDetailView: View {
                                             lastReadValue: Binding(
                                                 get: { manager.lastValues[characteristic.uuid] },
                                                 set: { manager.lastValues[characteristic.uuid] = $0 }
-                                            )
+                                            ),
+                                            writeResult: manager.writeResults[characteristic.uuid]
                                         )
                                     }
                                 }

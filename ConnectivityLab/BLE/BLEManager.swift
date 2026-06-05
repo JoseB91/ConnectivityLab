@@ -14,6 +14,7 @@ final class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     var connectingPeripheralID: UUID? = nil
     var characteristics: [CBUUID: [CBCharacteristic]] = [:]
     var lastValues: [CBUUID: Data] = [:]
+    var writeResults: [CBUUID: Result<Void, Error>] = [:]
 
     private var central: CBCentralManager!
     private var scanTask: Task<Void, Never>?
@@ -75,6 +76,7 @@ final class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         discoveredServices = []
         characteristics = [:]
         lastValues = [:]
+        writeResults = [:]
     }
 
     // MARK: - CBCentralManagerDelegate
@@ -134,6 +136,7 @@ final class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         discoveredServices = []
         characteristics = [:]
         lastValues = [:]
+        writeResults = [:]
         if let error {
             connectionError = error.localizedDescription
         }
@@ -162,5 +165,13 @@ final class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         guard error == nil, let data = characteristic.value else { return }
         lastValues[characteristic.uuid] = data
+    }
+
+    func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
+        if let error {
+            writeResults[characteristic.uuid] = .failure(error)
+        } else {
+            writeResults[characteristic.uuid] = .success(())
+        }
     }
 }
