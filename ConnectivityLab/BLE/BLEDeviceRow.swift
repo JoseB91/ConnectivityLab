@@ -4,6 +4,7 @@ import CoreBluetooth
 struct BLEDeviceRow: View {
     let peripheral: CBPeripheral
     let rssi: Int
+    var isConnecting: Bool = false
 
     var body: some View {
         HStack {
@@ -26,6 +27,7 @@ struct BLEDeviceRow: View {
                 .frame(width: 60, alignment: .trailing)
         }
         .padding(.vertical, 4)
+        .pulse(active: isConnecting)
     }
 }
 
@@ -46,11 +48,22 @@ struct BLEListView: View {
                     )
                     .padding()
                 } else {
+                    if manager.isScanning {
+                        Label("Scanning…", systemImage: "antenna.radiowaves.left.and.right")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .padding(.top, 8)
+                            .pulse(active: true)
+                    }
                     List(manager.peripherals, id: \.peripheral.identifier) { item in
                         NavigationLink {
                             BLEDeviceDetailView(manager: manager, peripheral: item.peripheral)
                         } label: {
-                            BLEDeviceRow(peripheral: item.peripheral, rssi: item.rssi)
+                            BLEDeviceRow(
+                                peripheral: item.peripheral,
+                                rssi: item.rssi,
+                                isConnecting: manager.connectingPeripheralID == item.peripheral.identifier
+                            )
                         }
                     }
                     .listStyle(.plain)

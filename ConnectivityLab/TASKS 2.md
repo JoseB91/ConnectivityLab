@@ -100,14 +100,14 @@ Each task pairs a GATT capability with a SwiftUI property-wrapper / view concept
   - [x] Push from `BLEDeviceRow` tap
 
 ### 3. Scanning / Connecting Visual Feedback — `ViewModifier` + animation
-- [ ] `Shared/PulseModifier.swift` (new)
-  - [ ] `ViewModifier` driven by `@State private var isPulsing` + `.onAppear` toggle
-  - [ ] `withAnimation(.easeInOut.repeatForever())` on opacity / scale
-  - [ ] Extension: `View.pulse(active:)`
-- [ ] Apply to:
-  - [ ] BLE "Scanning…" header while `isScanning == true`
-  - [ ] `BLEDeviceRow` while `manager.connectingPeripheralID == peripheral.identifier`
-- [ ] Rationale: built early so tasks 4–7 can reuse it for in-flight read/write/notify states
+- [x] `Shared/PulseModifier.swift` (new)
+  - [x] `ViewModifier` driven by `@State private var isPulsing` + `.onAppear` toggle
+  - [x] `withAnimation(.easeInOut.repeatForever())` on opacity / scale
+  - [x] Extension: `View.pulse(active:)`
+- [x] Apply to:
+  - [x] BLE "Scanning…" header while `isScanning == true`
+  - [x] `BLEDeviceRow` while `manager.connectingPeripheralID == peripheral.identifier`
+- [x] Rationale: built early so tasks 4–7 can reuse it for in-flight read/write/notify states
 
 ### 4. Discover Characteristics — `@State`
 - [ ] `BLE/BLEManager.swift`
