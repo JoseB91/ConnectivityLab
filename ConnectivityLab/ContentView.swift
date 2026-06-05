@@ -5,8 +5,8 @@ enum Transport {
 }
 
 struct ContentView: View {
+    @Environment(\.bleManager) private var bleManager
     @State private var selected: Transport = .ble
-    @State private var bleManager = BLEManager()
     @State private var wifiPinger = WiFiPinger()
 
     var body: some View {
@@ -23,7 +23,7 @@ struct ContentView: View {
 
                 switch selected {
                 case .ble:
-                    BLEListView(manager: bleManager)
+                    BLEListView()
                 case .wifi:
                     WiFiStatusView(pinger: wifiPinger)
                 }

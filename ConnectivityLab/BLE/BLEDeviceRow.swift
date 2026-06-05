@@ -4,13 +4,6 @@ import CoreBluetooth
 struct BLEDeviceRow: View {
     let peripheral: CBPeripheral
     let rssi: Int
-    var manager: BLEManager
-
-    @State private var isConnecting = false
-
-    private var isThisConnected: Bool {
-        manager.connectedPeripheral == peripheral && manager.isConnected
-    }
 
     var body: some View {
         HStack {
@@ -31,37 +24,13 @@ struct BLEDeviceRow: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .frame(width: 60, alignment: .trailing)
-
-            connectButton
         }
         .padding(.vertical, 4)
-    }
-
-    @ViewBuilder
-    private var connectButton: some View {
-        if isThisConnected {
-            Button("Disconnect", role: .destructive) {
-                manager.disconnect()
-            }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
-        } else {
-            Button(isConnecting ? "..." : "Connect") {
-                Task {
-                    isConnecting = true
-                    try? await manager.connect(peripheral: peripheral)
-                    isConnecting = false
-                }
-            }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
-            .disabled(isConnecting || manager.isConnected)
-        }
     }
 }
 
 struct BLEListView: View {
-    var manager: BLEManager
+    @Environment(\.bleManager) private var manager
 
     var body: some View {
         VStack {
@@ -77,16 +46,9 @@ struct BLEListView: View {
                 .padding()
             } else {
                 List(manager.peripherals, id: \.peripheral.identifier) { item in
-                    BLEDeviceRow(peripheral: item.peripheral, rssi: item.rssi, manager: manager)
+                    BLEDeviceRow(peripheral: item.peripheral, rssi: item.rssi)
                 }
                 .listStyle(.plain)
-            }
-
-            if let error = manager.connectionError {
-                Text(error)
-                    .font(.caption)
-                    .foregroundStyle(.red)
-                    .padding(.horizontal)
             }
 
             Spacer()
