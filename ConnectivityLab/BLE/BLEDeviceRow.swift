@@ -4,6 +4,13 @@ import CoreBluetooth
 struct BLEDeviceRow: View {
     let peripheral: CBPeripheral
     let rssi: Int
+    var manager: BLEManager
+
+    @State private var isConnecting = false
+
+    private var isThisConnected: Bool {
+        manager.connectedPeripheral == peripheral && manager.isConnected
+    }
 
     var body: some View {
         HStack {
@@ -24,8 +31,32 @@ struct BLEDeviceRow: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .frame(width: 60, alignment: .trailing)
+
+            connectButton
         }
         .padding(.vertical, 4)
+    }
+
+    @ViewBuilder
+    private var connectButton: some View {
+        if isThisConnected {
+            Button("Disconnect", role: .destructive) {
+                manager.disconnect()
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+        } else {
+            Button(isConnecting ? "..." : "Connect") {
+                Task {
+                    isConnecting = true
+                    try? await manager.connect(peripheral: peripheral)
+                    isConnecting = false
+                }
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .disabled(isConnecting || manager.isConnected)
+        }
     }
 }
 
@@ -38,14 +69,24 @@ struct BLEListView: View {
                 ContentUnavailableView(error, systemImage: "bluetooth.slash")
                     .padding()
             } else if manager.peripherals.isEmpty && !manager.isScanning {
-                ContentUnavailableView("No Devices", systemImage: "antenna.radiowaves.left.and.right.slash",
-                                       description: Text("Tap Scan to discover nearby BLE devices."))
-                    .padding()
+                ContentUnavailableView(
+                    "No Devices",
+                    systemImage: "antenna.radiowaves.left.and.right.slash",
+                    description: Text("Tap Scan to discover nearby BLE devices.")
+                )
+                .padding()
             } else {
                 List(manager.peripherals, id: \.peripheral.identifier) { item in
-                    BLEDeviceRow(peripheral: item.peripheral, rssi: item.rssi)
+                    BLEDeviceRow(peripheral: item.peripheral, rssi: item.rssi, manager: manager)
                 }
                 .listStyle(.plain)
+            }
+
+            if let error = manager.connectionError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .padding(.horizontal)
             }
 
             Spacer()

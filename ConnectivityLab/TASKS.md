@@ -77,12 +77,12 @@
 
 ## GATT (Next Step After Scan)
 
-- [ ] `BLE/BLEManager.swift` — wire up real connection lifecycle
-  - [ ] Implement `connect(peripheral:)` — call `central.connect(peripheral)`
-  - [ ] Handle `centralManager(_:didConnect:)` — set `isConnected = true`, kick off service discovery
-  - [ ] Handle `centralManager(_:didFailToConnect:error:)` — surface error
-  - [ ] Handle `centralManager(_:didDisconnectPeripheral:error:)` — set `isConnected = false`
-  - [ ] Conform to `CBPeripheralDelegate` for service / characteristic discovery
+- [x] `BLE/BLEManager.swift` — wire up real connection lifecycle
+  - [x] Implement `connect(peripheral:)` — call `central.connect(peripheral)`
+  - [x] Handle `centralManager(_:didConnect:)` — set `isConnected = true`, kick off service discovery
+  - [x] Handle `centralManager(_:didFailToConnect:error:)` — surface error
+  - [x] Handle `centralManager(_:didDisconnectPeripheral:error:)` — set `isConnected = false`
+  - [x] Conform to `CBPeripheralDelegate` for service / characteristic discovery
 - [ ] `BLE/GATTExplorerView.swift` — drill-down view for a connected peripheral
   - [ ] List discovered services (UUID + name lookup for known SIG-assigned UUIDs)
   - [ ] List characteristics per service with properties (read / write / notify / indicate)
