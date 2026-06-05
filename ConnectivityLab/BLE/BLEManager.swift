@@ -9,7 +9,9 @@ final class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     var stateError: String? = nil
     var connectionError: String? = nil
     var connectedPeripheral: CBPeripheral? = nil
-    var services: [CBService] = []
+    var selectedPeripheral: CBPeripheral? = nil
+    var discoveredServices: [CBService] = []
+    var connectingPeripheralID: UUID? = nil
 
     private var central: CBCentralManager!
     private var scanTask: Task<Void, Never>?
@@ -49,6 +51,7 @@ final class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
 
     func connect(peripheral: CBPeripheral) async throws {
         connectionError = nil
+        connectingPeripheralID = peripheral.identifier
         stopScan()
 
         try await withCheckedThrowingContinuation { continuation in
@@ -65,7 +68,9 @@ final class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         stopScan()
         isConnected = false
         connectedPeripheral = nil
-        services = []
+        selectedPeripheral = nil
+        connectingPeripheralID = nil
+        discoveredServices = []
     }
 
     // MARK: - CBCentralManagerDelegate
@@ -102,6 +107,7 @@ final class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         isConnected = true
         connectedPeripheral = peripheral
+        connectingPeripheralID = nil
         peripheral.discoverServices(nil)
         connectContinuation?.resume()
         connectContinuation = nil
@@ -110,6 +116,7 @@ final class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
         let message = error?.localizedDescription ?? "Connection failed."
         connectionError = message
+        connectingPeripheralID = nil
         connectContinuation?.resume(throwing: error ?? NSError(domain: "BLE", code: -1,
                                     userInfo: [NSLocalizedDescriptionKey: message]))
         connectContinuation = nil
@@ -118,7 +125,9 @@ final class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         isConnected = false
         connectedPeripheral = nil
-        services = []
+        selectedPeripheral = nil
+        connectingPeripheralID = nil
+        discoveredServices = []
         if let error {
             connectionError = error.localizedDescription
         }
@@ -132,16 +141,16 @@ final class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
 
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         guard error == nil, let discovered = peripheral.services else { return }
-        services = discovered
+        discoveredServices = discovered
         for service in discovered {
             peripheral.discoverCharacteristics(nil, for: service)
         }
     }
 
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
-        // Trigger observation update so views reflecting services/characteristics refresh
-        if let idx = services.firstIndex(where: { $0 == service }) {
-            services[idx] = service
+        // Trigger observation update so views reflecting discoveredServices/characteristics refresh
+        if let idx = discoveredServices.firstIndex(where: { $0 == service }) {
+            discoveredServices[idx] = service
         }
     }
 }

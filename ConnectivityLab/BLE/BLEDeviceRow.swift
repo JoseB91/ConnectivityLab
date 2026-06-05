@@ -33,33 +33,39 @@ struct BLEListView: View {
     @Environment(\.bleManager) private var manager
 
     var body: some View {
-        VStack {
-            if let error = manager.stateError {
-                ContentUnavailableView(error, systemImage: "bluetooth.slash")
+        NavigationStack {
+            VStack {
+                if let error = manager.stateError {
+                    ContentUnavailableView(error, systemImage: "bluetooth.slash")
+                        .padding()
+                } else if manager.peripherals.isEmpty && !manager.isScanning {
+                    ContentUnavailableView(
+                        "No Devices",
+                        systemImage: "antenna.radiowaves.left.and.right.slash",
+                        description: Text("Tap Scan to discover nearby BLE devices.")
+                    )
                     .padding()
-            } else if manager.peripherals.isEmpty && !manager.isScanning {
-                ContentUnavailableView(
-                    "No Devices",
-                    systemImage: "antenna.radiowaves.left.and.right.slash",
-                    description: Text("Tap Scan to discover nearby BLE devices.")
-                )
-                .padding()
-            } else {
-                List(manager.peripherals, id: \.peripheral.identifier) { item in
-                    BLEDeviceRow(peripheral: item.peripheral, rssi: item.rssi)
+                } else {
+                    List(manager.peripherals, id: \.peripheral.identifier) { item in
+                        NavigationLink {
+                            BLEDeviceDetailView(manager: manager, peripheral: item.peripheral)
+                        } label: {
+                            BLEDeviceRow(peripheral: item.peripheral, rssi: item.rssi)
+                        }
+                    }
+                    .listStyle(.plain)
                 }
-                .listStyle(.plain)
-            }
 
-            Spacer()
+                Spacer()
 
-            Button(manager.isScanning ? "Stop" : "Scan") {
-                manager.isScanning ? manager.stopScan() : manager.startScan()
+                Button(manager.isScanning ? "Stop" : "Scan") {
+                    manager.isScanning ? manager.stopScan() : manager.startScan()
+                }
+                .buttonStyle(.borderedProminent)
+                .padding()
             }
-            .buttonStyle(.borderedProminent)
-            .padding()
+            .onAppear { manager.startScan() }
+            .onDisappear { manager.stopScan() }
         }
-        .onAppear { manager.startScan() }
-        .onDisappear { manager.stopScan() }
     }
 }

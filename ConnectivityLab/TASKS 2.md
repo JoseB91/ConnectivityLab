@@ -88,16 +88,16 @@ Each task pairs a GATT capability with a SwiftUI property-wrapper / view concept
 - [x] Rationale: every subsequent task adds a view that needs the manager — wire this first to avoid refactoring later
 
 ### 2. Connect & Discover Services — `@Bindable`
-- [ ] `BLE/BLEManager.swift`
-  - [ ] Add `selectedPeripheral: CBPeripheral?` and `discoveredServices: [CBService]`
-  - [ ] Add `connectingPeripheralID: UUID?` for in-flight connect state
-  - [ ] Implement `connect()` for the selected peripheral; call `centralManager.connect(_:)`
-  - [ ] Conform to `CBPeripheralDelegate`; on `didConnect`, call `discoverServices(nil)`
-  - [ ] Implement `peripheral(_:didDiscoverServices:)` → populate `discoveredServices`
-- [ ] `BLE/BLEDeviceDetailView.swift` (new)
-  - [ ] Receive `@Bindable var manager: BLEManager` (iOS 17 `@Observable` binding pattern)
-  - [ ] List services by UUID
-  - [ ] Push from `BLEDeviceRow` tap
+- [x] `BLE/BLEManager.swift`
+  - [x] Add `selectedPeripheral: CBPeripheral?` and `discoveredServices: [CBService]`
+  - [x] Add `connectingPeripheralID: UUID?` for in-flight connect state
+  - [x] Implement `connect()` for the selected peripheral; call `centralManager.connect(_:)`
+  - [x] Conform to `CBPeripheralDelegate`; on `didConnect`, call `discoverServices(nil)`
+  - [x] Implement `peripheral(_:didDiscoverServices:)` → populate `discoveredServices`
+- [x] `BLE/BLEDeviceDetailView.swift` (new)
+  - [x] Receive `@Bindable var manager: BLEManager` (iOS 17 `@Observable` binding pattern)
+  - [x] List services by UUID
+  - [x] Push from `BLEDeviceRow` tap
 
 ### 3. Scanning / Connecting Visual Feedback — `ViewModifier` + animation
 - [ ] `Shared/PulseModifier.swift` (new)
